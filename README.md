@@ -10,3 +10,9 @@ Note: Gazebo's lidar does not have distortion, so distortion needs to be added m
 (3) Set the motion trajectory, control the components' motion, and simulate IMU output and lidar distortion based on the trajectory.
 
 For (1) and (2), build using URDF files; for (3), implement in C++ and compile into a ROS executable.
+
+
+
+https://github.com/arasika/gazebo_iclsimu/assets/74124918/4a538f70-d887-49e6-9d51-40493874c668
+
+
