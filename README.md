@@ -14,5 +14,7 @@ For (1) and (2), build using URDF files; for (3), implement in C++ and compile i
 
 
 https://github.com/arasika/gazebo_iclsimu/assets/74124918/4a538f70-d887-49e6-9d51-40493874c668
+a simulated pointcloud distortion
+
 
 
