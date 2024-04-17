@@ -1,0 +1,246 @@
+<robot name="my_base" xmlns:xacro="http://www.ros.org/wiki/xacro">
+    <xacro:property name="PI" value="3.141"/>
+    <material name="black">
+        <color rgba="0.0 0.0 0.0 1.0" />
+    </material>
+    
+    <!-- base property -->
+    <xacro:property name="base_footprint_radius" value="0.05" /> 
+    <xacro:property name="base_link_radius" value="0.25" /> 
+    <xacro:property name="base_link_length" value="0.25" /> 
+    <xacro:property name="earth_space" value="0.1" /> 
+    <xacro:property name="base_link_m" value="5.0" /> 
+
+
+    <!-- shelf property -->
+    <xacro:property name="shelf_link_radius" value="0.1" /> 
+    <xacro:property name="shelf_link_length" value="0.16" />
+    <xacro:property name="shelf_link_m" value="2.0" /> 
+
+    <xacro:property name="shelf_linkx_radius" value="0.05" /> 
+    <xacro:property name="shelf_linkx_length" value="0.16" /> 
+    <xacro:property name="shelf_linkx_m" value="0.5" />
+
+
+    <!-- drving wheel -->
+    <xacro:property name="wheel_radius" value="0.1" />
+    <xacro:property name="wheel_length" value="0.05" />
+    <xacro:property name="wheel_m" value="0.05" /> 
+    <xacro:macro name="add_wheels" params="name flag">
+      <link name="${name}_wheel">
+        <visual>
+          <geometry>
+            <cylinder radius="${wheel_radius}" length="${wheel_length}" />
+          </geometry>
+          <origin xyz="0.0 0.0 0.0" rpy="${PI / 2} 0.0 0.0" />
+          <material name="black" />
+        </visual>
+        <collision>
+          <geometry>
+            <cylinder radius="${wheel_radius}" length="${wheel_length}" />
+          </geometry>
+          <origin xyz="0.0 0.0 0.0" rpy="${PI / 2} 0.0 0.0" />
+        </collision>
+        <xacro:cylinder_inertial_matrix m="${wheel_m}" r="${wheel_radius}" h="${wheel_length}" />
+      </link>
+
+      <joint name="${name}" type="continuous">
+        <parent link="base_link" />
+        <child link="${name}_wheel" />
+        <origin xyz="0 ${flag * base_link_radius} ${-(earth_space + base_link_length / 2 - wheel_radius) }" />
+        <axis xyz="0 1 0" />
+      </joint>
+      <gazebo reference="${name}_wheel">
+        <material>Gazebo/White</material>
+      </gazebo>
+
+
+              <!-- Transmission is important to link the joints and the controller -->
+        <transmission name="${name}_trans">
+            <type>transmission_interface/SimpleTransmission</type>
+            <joint name="${name}_wheel" >
+                <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
+            </joint>
+            <actuator name="${name}_motor">
+                <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
+                <mechanicalReduction>1</mechanicalReduction>
+            </actuator>
+        </transmission>
+    </xacro:macro>
+    
+    <xacro:add_wheels name="base_l_wheel_joint" flag="1" /> 
+    <xacro:add_wheels name="base_r_wheel_joint" flag="-1" />
+    <!-- carrying wheel -->
+    <xacro:property name="support_wheel_radius" value="0.05" /> 
+    <xacro:property name="support_wheel_m" value="0.025" /> 
+    <xacro:macro name="add_support_wheel" params="name flag" >
+      <link name="${name}_wheel">
+        <visual>
+            <geometry>
+                <sphere radius="${support_wheel_radius}" />
+            </geometry>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <material name="black" />
+        </visual>
+        <collision>
+            <geometry>
+                <sphere radius="${support_wheel_radius}" />
+            </geometry>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+        </collision>
+        <xacro:sphere_inertial_matrix m="${support_wheel_m}" r="${support_wheel_radius}" />
+      </link>
+
+      <joint name="${name}_wheel2base_link" type="continuous">
+          <parent link="base_link" />
+          <child link="${name}_wheel" />
+          <origin xyz="${flag * (base_link_radius - support_wheel_radius)} 0 ${-(base_link_length / 2 + earth_space / 2)}" />
+          <axis xyz="1 1 1" />
+      </joint>
+      <gazebo reference="${name}_wheel">
+       <material>Gazebo/Black</material>
+      </gazebo>
+    </xacro:macro>
+
+    <xacro:add_support_wheel name="front" flag="1" />
+    <xacro:add_support_wheel name="back" flag="-1" />
+
+
+     <!--mbot_base -->
+    <xacro:macro name="mbot_base_gazebo">
+      <link name="base_footprint">
+         <visual>
+           <geometry>
+             <sphere radius="${base_footprint_radius}" />
+          </geometry>
+         </visual>
+       </link>
+
+      <link name="base_link">
+         <visual>
+           <geometry>
+              <cylinder radius="${base_link_radius}" length="${base_link_length}" />
+           </geometry> 
+           <origin xyz="0 0 0" rpy="0 0 0" />
+           <material name="yellow">
+               <color rgba="0.5 0.3 0.0 0.5" />
+             </material>
+         </visual>
+         <collision>
+           <geometry>
+              <cylinder radius="${base_link_radius}" length="${base_link_length}" />
+           </geometry>
+           <origin xyz="0 0 0" rpy="0 0 0" />
+           </collision>
+               <xacro:cylinder_inertial_matrix m="${base_link_m}" r="${base_link_radius}" h="${base_link_length}" />
+       </link>
+
+      <joint name="base_link2base_footprint" type="fixed">
+        <parent link="base_footprint" />
+        <child link="base_link" />
+        <origin xyz="0 0 ${earth_space/2 + base_link_length / 2 }" />
+      </joint>
+
+      <gazebo reference="base_link">
+          <material>Gazebo/Yellow</material>
+      </gazebo>
+
+
+      <!-- control  -->
+      <gazebo>
+            <plugin name="differential_drive_controller" 
+                    filename="libgazebo_ros_diff_drive.so">
+                <rosDebugLevel>Debug</rosDebugLevel>
+                <publishWheelTF>true</publishWheelTF>
+                <robotNamespace>/</robotNamespace>
+                <publishTf>1</publishTf>
+                <publishWheelJointState>true</publishWheelJointState>
+                <alwaysOn>true</alwaysOn>
+                <updateRate>100.0</updateRate>
+                <legacyMode>true</legacyMode>
+                <leftJoint>base_l_wheel_joint</leftJoint>
+                <rightJoint>base_r_wheel_joint</rightJoint>
+                <wheelSeparation>${base_link_radius*2}</wheelSeparation>
+                <wheelDiameter>${2*wheel_radius}</wheelDiameter>
+                <broadcastTF>1</broadcastTF>
+                <wheelTorque>30</wheelTorque>
+                <wheelAcceleration>1.8</wheelAcceleration>
+                <commandTopic>cmd_vel</commandTopic>
+                <odometryFrame>odom</odometryFrame> 
+                <odometryTopic>odom</odometryTopic> 
+                <robotBaseFrame>base_footprint</robotBaseFrame>
+            </plugin>
+       </gazebo> 
+
+     </xacro:macro>
+
+     <mbot_base_gazebo/>
+
+
+     <!--shelf -->
+     <xacro:macro name="mbot_shelf_gazebo">
+
+      <link name="shelf_link">
+         <visual>
+           <geometry>
+              <cylinder radius="${shelf_link_radius}" length="${shelf_link_length}" />
+           </geometry> 
+           <origin xyz="0 0 0" rpy="0 0 0" />
+           <material name="yellow">
+               <color rgba="0.5 0.3 0.0 0.5" />
+             </material>
+         </visual>
+         <collision>
+           <geometry>
+              <cylinder radius="${shelf_link_radius}" length="${shelf_link_length}" />
+           </geometry>
+           <origin xyz="0 0 0" rpy="0 0 0" />
+           </collision>
+               <xacro:cylinder_inertial_matrix m="${shelf_link_m}" r="${shelf_link_radius}" h="${shelf_link_length}" />
+       </link>
+
+        <joint name="shelf_link2base_link" type="fixed">
+        <parent link="base_link" />
+        <child link="shelf_link" />
+        <origin xyz="0 0 ${(shelf_link_length + base_link_length) / 2 }" />
+      </joint>
+
+      </xacro:macro>
+
+       <mbot_shelf_gazebo/>
+
+       <xacro:macro name="mbot_shelf_gazebox">
+
+      <link name="shelf_linkx">
+         <visual>
+           <geometry>
+              <cylinder radius="${shelf_linkx_radius}" length="${shelf_linkx_length}" />
+           </geometry> 
+           <origin xyz="0 0 0" rpy="0 0 0" />
+           <material name="yellow">
+               <color rgba="0.5 0.3 0.0 0.5" />
+             </material>
+         </visual>
+         <collision>
+           <geometry>
+              <cylinder radius="${shelf_linkx_radius}" length="${shelf_linkx_length}" />
+           </geometry>
+           <origin xyz="0 0 0" rpy="0 0 0" />
+           </collision>
+               <xacro:cylinder_inertial_matrix m="${shelf_linkx_m}" r="${shelf_linkx_radius}" h="${shelf_linkx_length}" />
+       </link>
+
+        <joint name="shelf_linkx2shelf_link" type="fixed">
+        <parent link="shelf_link" />
+        <child link="shelf_linkx" />
+        <origin xyz="0 0 ${(shelf_link_length+shelf_linkx_length ) / 2 }" />
+      </joint>
+
+      </xacro:macro>
+
+       <mbot_shelf_gazebox/>
+
+
+
+
+</robot>

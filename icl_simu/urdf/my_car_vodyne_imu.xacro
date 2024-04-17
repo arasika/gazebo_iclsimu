@@ -1,0 +1,17 @@
+<robot name="my_car_camera_laser" xmlns:xacro="http://wiki.ros.org/xacro" reference= "base_footprint_radius">
+
+    <xacro:include filename="my_inertial.xacro" />
+    <xacro:include filename="my_vodyne_gazebo.xacro" />
+    <xacro:include filename="my_imu_gazebo.xacro" />
+    <xacro:include filename="my_camera_gazebo.xacro" />
+
+    <!--camera-->
+     <xacro:include filename="$(find icl_simu)/urdf/my_sensor_camera.xacro" />
+
+    <!--imu-->
+    <xacro:include filename="$(find icl_simu)/urdf/my_sensor_imu.xacro" />
+
+    <!--vodyne-->
+    <xacro:include filename="$(find icl_simu)/urdf/my_sensor_vodyne.xacro" />
+
+</robot>

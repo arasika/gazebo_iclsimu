@@ -1,0 +1,27 @@
+<launch>
+    <!-- launch gazebo -->
+    <arg name="paused" default="false"/>
+    <arg name="use_sim_time" default="true"/>
+    <arg name="gui" default="true"/>
+    <arg name="headless" default="false"/>
+    <arg name="debug" default="false"/>
+
+     <!--/usr/share/gazebo-9/worlds/cafe.world-->
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+
+    </include>
+    <!-- laod robot description -->
+    <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find icl_simu)/urdf/my_sensor_imu.xacro'" />
+
+    <!-- run joint_state_publisher node，publish joint state   -->
+    <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" ></node> 
+
+    <!-- run robot_state_publisher node，pubish tf  -->
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"  output="screen" >
+        <param name="publish_frequency" type="double" value="50.0" />
+    </node>
+    
+    <!--publish robot state 
+    <node pkg="joint_state_publisher" type="joint_state_publisher" name="joint_state_publisher" output="screen" />
+    <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" output="screen" />-->
+</launch>
